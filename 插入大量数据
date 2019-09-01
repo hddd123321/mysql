@@ -1,0 +1,76 @@
+CREATE TABLE dept (
+	id INT (10) UNSIGNED PRIMARY KEY auto_increment,
+	deptno MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+	dname VARCHAR (13) NOT NULL DEFAULT "",
+	loc VARCHAR (13) NOT NULL DEFAULT ""
+) ENGINE = INNODB DEFAULT charset = gbk;
+
+CREATE table emp(
+id int UNSIGNED PRIMARY KEY auto_increment,
+empno MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,/*编号*/
+ename VARCHAR(20) NOT NULL DEFAULT "",
+job VARCHAR(90) not null DEFAULT "",
+mgr MEDIUMINT UNSIGNED not null DEFAULT 0,
+hiredate Date NOT NULL,
+sal decimal(7,2) not NULL,
+comm DECIMAL(7,2) not null,
+deptno MEDIUMINT UNSIGNED not NULL DEFAULT 0)ENGINE = INNODB DEFAULT CHARSET=gbk;
+
+set GLOBAL log_bin_trust_function_creators = 1;
+
+delimiter $$
+CREATE FUNCTION rand_string(n INT) RETURNS VARCHAR(255)
+BEGIN
+DECLARE chars_str VARCHAR(100) DEFAULT 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+DECLARE return_str VARCHAR(255) DEFAULT '';
+DECLARE i INT DEFAULT 0;
+WHILE i< n DO
+SET return_str = CONCAT(return_str,SUBSTRING(chars_str,FLOOR(1+RAND()*52),1));
+SET i = i+1;
+END WHILE;
+RETURN return_str;
+END $$
+
+
+delimiter $$
+CREATE FUNCTION rand_num() RETURNS INT(5)
+BEGIN
+DECLARE i INt DEFAULT 0;
+SET i = FLOOR(100+RAND()*10);
+RETURN i;
+END $$
+
+drop PROCEDURE insert_emp ;
+
+delimiter $$
+CREATE PROCEDURE insert_emp(in START int(10),in max_num int(10))
+BEGIN
+DECLARE i INT DEFAULT 0;
+SET autocommit = 0;
+REPEAT
+SET i = i+1;
+INSERT INTO emp(empno,ename,job,mgr,hiredate,sal,comm,deptno) VALUES
+((START+i),rand_string(6),'SALESMAN',0001,CURDATE(),2000,400,rand_num());
+UNTIL i = max_num
+END REPEAT;
+COMMIT;
+END $$
+
+drop PROCEDURE insert_dept ;
+delimiter $$
+CREATE PROCEDURE insert_dept(in START int(10),in max_num int(10))
+BEGIN
+DECLARE i INT DEFAULT 0;
+SET autocommit = 0;
+REPEAT
+SET i = i+1;
+INSERT INTO dept(deptno,dname,loc)VALUES((START+i),rand_string(10),rand_String(8));
+UNTIL i = max_num
+END REPEAT;
+COMMIT;
+END $$
+
+DELIMITER ;
+CALL insert_dept(100,10);
+DELIMITER ;
+CALL insert_emp(100001,500000);
